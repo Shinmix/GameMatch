@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GameMatch — Find Your Perfect Game</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ========== HERO SECTION ========== -->
+  <section id="hero" class="section active">
+    <div class="hero-bg">
+      <div class="grid-overlay"></div>
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-badge">AI-Powered Recommendations</div>
+      <h1 class="hero-title">
+        Find Your <span class="gradient-text">Perfect</span> Game
+      </h1>
+      <p class="hero-desc">
+        Answer five quick questions and we'll match you with games you'll actually love — no endless browsing required.
+      </p>
+      <div class="hero-actions">
+        <button class="btn btn-primary" id="startQuizBtn">
+          <span class="btn-icon">▶</span> Start Quiz
+        </button>
+        <button class="btn btn-ghost" id="historyBtn">
+          <span class="btn-icon">◷</span> My History
+        </button>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><span class="stat-num">25+</span><span class="stat-label">Games</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><span class="stat-num">5</span><span class="stat-label">Questions</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><span class="stat-num">30s</span><span class="stat-label">To Match</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== QUIZ SECTION ========== -->
+  <section id="quiz" class="section">
+    <div class="quiz-container">
+
+      <!-- Progress bar -->
+      <div class="progress-wrap">
+        <div class="progress-info">
+          <span id="progressLabel">Question 1 of 5</span>
+          <span id="progressPct">0%</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-steps">
+          <div class="step active" data-step="0"></div>
+          <div class="step" data-step="1"></div>
+          <div class="step" data-step="2"></div>
+          <div class="step" data-step="3"></div>
+          <div class="step" data-step="4"></div>
+        </div>
+      </div>
+
+      <!-- Question card -->
+      <div class="question-card" id="questionCard">
+        <div class="q-number" id="qNumber">01</div>
+        <h2 class="q-text" id="qText"></h2>
+        <p class="q-hint" id="qHint"></p>
+        <div class="options-grid" id="optionsGrid"></div>
+      </div>
+
+      <!-- Nav buttons -->
+      <div class="quiz-nav">
+        <button class="btn btn-ghost" id="prevBtn" disabled>← Back</button>
+        <button class="btn btn-primary" id="nextBtn" disabled>Next →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== LOADING SECTION ========== -->
+  <section id="loading" class="section">
+    <div class="loading-container">
+      <div class="loading-ring">
+        <div class="ring r1"></div>
+        <div class="ring r2"></div>
+        <div class="ring r3"></div>
+        <div class="loading-icon">🎮</div>
+      </div>
+      <h2 class="loading-title">Matching your profile…</h2>
+      <p class="loading-sub" id="loadingSub">Scanning 25 games</p>
+    </div>
+  </section>
+
+  <!-- ========== RESULTS SECTION ========== -->
+  <section id="results" class="section">
+    <div class="results-container">
+
+      <!-- Top bar -->
+      <div class="results-header">
+        <div>
+          <h2 class="results-title">Your Matches</h2>
+          <p class="results-sub" id="matchSub">Based on your preferences</p>
+        </div>
+        <div class="results-controls">
+          <div class="search-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" class="search-input" placeholder="Search games…" />
+          </div>
+          <select class="filter-select" id="genreFilter">
+            <option value="all">All Genres</option>
+            <option value="action">Action</option>
+            <option value="rpg">RPG</option>
+            <option value="fps">FPS</option>
+            <option value="adventure">Adventure</option>
+            <option value="strategy">Strategy</option>
+            <option value="horror">Horror</option>
+            <option value="sports">Sports</option>
+            <option value="survival">Survival</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Game cards -->
+      <div class="games-grid" id="gamesGrid"></div>
+
+      <!-- Bottom actions -->
+      <div class="results-actions">
+        <button class="btn btn-primary" id="restartBtn">↺ Restart Quiz</button>
+        <button class="btn btn-ghost" id="viewHistoryBtn">View History</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== HISTORY MODAL ========== -->
+  <div class="modal-overlay" id="historyModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Recommendation History</h3>
+        <button class="modal-close" id="closeModal">✕</button>
+      </div>
+      <div class="modal-body" id="historyList"></div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost btn-sm" id="clearHistory">Clear History</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== GAME DETAIL MODAL ========== -->
+  <div class="modal-overlay" id="gameModal">
+    <div class="modal modal-wide">
+      <div class="modal-header">
+        <h3 id="modalGameTitle">Game Title</h3>
+        <button class="modal-close" id="closeGameModal">✕</button>
+      </div>
+      <div class="modal-body" id="gameModalBody"></div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
