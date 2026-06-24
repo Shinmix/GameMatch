@@ -740,9 +740,8 @@ function renderResultsPage(scored) {
   $('matchSub').textContent =
     `${genres.join(', ') || 'Mixed'} games for ${platforms.join(', ') || 'your platform'} — ${experiences.join(', ') || 'your'} focus`;
 
-  // Reset filters
-  $('searchInput').value  = '';
-  $('genreFilter').value  = 'all';
+  // Reset search
+  $('searchInput').value = '';
 
   renderCards(scored);
 }
@@ -803,20 +802,15 @@ function renderCards(scored) {
    8. SEARCH & FILTER
    ============================================================ */
 function getFilteredResults() {
-  const query  = $('searchInput').value.toLowerCase().trim();
-  const genre  = $('genreFilter').value;
-
-  return results.filter(({ game }) => {
-    const matchSearch = !query ||
-      game.title.toLowerCase().includes(query) ||
-      game.description.toLowerCase().includes(query);
-    const matchGenre  = genre === 'all' || game.genre === genre;
-    return matchSearch && matchGenre;
-  });
+  const query = $('searchInput').value.toLowerCase().trim();
+  return results.filter(({ game }) =>
+    !query ||
+    game.title.toLowerCase().includes(query) ||
+    game.description.toLowerCase().includes(query)
+  );
 }
 
 $('searchInput').addEventListener('input', () => renderCards(getFilteredResults()));
-$('genreFilter').addEventListener('change', () => renderCards(getFilteredResults()));
 
 /* ============================================================
    9. GAME DETAIL MODAL
