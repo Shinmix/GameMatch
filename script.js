@@ -417,7 +417,7 @@ const QUESTIONS = [
   {
     id: "platform",
     text: "What platform do you play on?",
-    hint: "Pick the one you use most.",
+    hint: "Select all that apply.",
     options: [
       { value: "pc",          label: "PC",               icon: "🖥️" },
       { value: "playstation", label: "PlayStation",      icon: "🎮" },
@@ -429,7 +429,7 @@ const QUESTIONS = [
   {
     id: "genre",
     text: "What genre do you enjoy most?",
-    hint: "Be honest — this matters a lot.",
+    hint: "Select all genres you enjoy.",
     options: [
       { value: "action",   label: "Action",    icon: "⚡" },
       { value: "rpg",      label: "RPG",        icon: "🧙" },
@@ -443,7 +443,7 @@ const QUESTIONS = [
   {
     id: "mode",
     text: "Do you prefer…",
-    hint: "How do you like to spend your play time?",
+    hint: "Select all that apply.",
     options: [
       { value: "single",      label: "Single-player", icon: "🧍" },
       { value: "multiplayer", label: "Multiplayer",    icon: "👥" },
@@ -453,7 +453,7 @@ const QUESTIONS = [
   {
     id: "session",
     text: "How long do you usually play?",
-    hint: "Per typical session.",
+    hint: "Select all that apply.",
     options: [
       { value: "<1h",  label: "Under 1 hour",  icon: "⚡" },
       { value: "1-3h", label: "1 – 3 hours",   icon: "🕐" },
@@ -464,7 +464,7 @@ const QUESTIONS = [
   {
     id: "experience",
     text: "What kind of experience are you after?",
-    hint: "Pick the vibe that calls to you.",
+    hint: "Select all that apply.",
     options: [
       { value: "competitive",  label: "Competitive",   icon: "🏆" },
       { value: "relaxing",     label: "Relaxing",      icon: "😌" },
@@ -532,19 +532,21 @@ function renderQuestion(direction = 'right') {
     $('qText').textContent    = q.text;
     $('qHint').textContent    = q.hint;
 
-    // Build option buttons
+    // Build option buttons (multi-select: answers[q.id] is always an array)
+    if (!Array.isArray(answers[q.id])) answers[q.id] = [];
     const grid = $('optionsGrid');
     grid.innerHTML = '';
     q.options.forEach(opt => {
       const btn = document.createElement('button');
       btn.className = 'option-btn';
       btn.dataset.value = opt.value;
+      const isSelected = answers[q.id].includes(opt.value);
       btn.innerHTML = `
         <span class="opt-icon">${opt.icon}</span>
         <span class="opt-label">${opt.label}</span>
-        <span class="opt-check">${answers[q.id] === opt.value ? '✓' : ''}</span>
+        <span class="opt-check">${isSelected ? '✓' : ''}</span>
       `;
-      if (answers[q.id] === opt.value) btn.classList.add('selected');
+      if (isSelected) btn.classList.add('selected');
       btn.addEventListener('click', () => selectOption(btn, q.id, opt.value));
       grid.appendChild(btn);
     });
@@ -558,15 +560,18 @@ function renderQuestion(direction = 'right') {
 }
 
 function selectOption(btn, questionId, value) {
-  // Deselect all
-  $('optionsGrid').querySelectorAll('.option-btn').forEach(b => {
-    b.classList.remove('selected');
-    b.querySelector('.opt-check').textContent = '';
-  });
-  // Select clicked
-  btn.classList.add('selected');
-  btn.querySelector('.opt-check').textContent = '✓';
-  answers[questionId] = value;
+  // Toggle the clicked option in/out of the answers array
+  if (!Array.isArray(answers[questionId])) answers[questionId] = [];
+  const idx = answers[questionId].indexOf(value);
+  if (idx === -1) {
+    answers[questionId].push(value);
+    btn.classList.add('selected');
+    btn.querySelector('.opt-check').textContent = '✓';
+  } else {
+    answers[questionId].splice(idx, 1);
+    btn.classList.remove('selected');
+    btn.querySelector('.opt-check').textContent = '';
+  }
   updateNavButtons();
 }
 
@@ -584,7 +589,8 @@ function updateProgress() {
 }
 
 function updateNavButtons() {
-  const answered = answers[QUESTIONS[currentQuestion].id] !== undefined;
+  const val = answers[QUESTIONS[currentQuestion].id];
+  const answered = Array.isArray(val) ? val.length > 0 : val !== undefined;
   $('prevBtn').disabled = currentQuestion === 0;
   $('nextBtn').disabled = !answered;
 
@@ -593,7 +599,9 @@ function updateNavButtons() {
 }
 
 $('nextBtn').addEventListener('click', () => {
-  if (!answers[QUESTIONS[currentQuestion].id]) return;
+  const val = answers[QUESTIONS[currentQuestion].id];
+  const answered = Array.isArray(val) ? val.length > 0 : !!val;
+  if (!answered) return;
   if (currentQuestion < QUESTIONS.length - 1) {
     currentQuestion++;
     renderQuestion('right');
@@ -618,48 +626,55 @@ $('prevBtn').addEventListener('click', () => {
  * Returns array of { game, score, matchNote } sorted descending.
  */
 function scoreGames() {
-  const { platform, genre, mode, session, experience } = answers;
+  // Normalise answers — each is now an array
+  const platforms   = answers.platform   || [];
+  const genres      = answers.genre      || [];
+  const modes       = answers.mode       || [];
+  const sessions    = answers.session    || [];
+  const experiences = answers.experience || [];
 
   return GAMES.map(game => {
     let score = 0;
     const reasons = [];
 
-    // Platform match (required — hard filter if no platform match)
-    const platformMatch = game.platforms.includes(platform);
+    // Platform — game must match at least one selected platform
+    const platformMatch = platforms.some(p => game.platforms.includes(p));
     if (!platformMatch) return { game, score: -1, matchNote: '' };
     score += 30;
 
-    // Genre match (primary driver)
-    if (game.genre === genre) {
+    // Genre — score for each matching genre selected
+    const exactGenreMatch = genres.includes(game.genre);
+    if (exactGenreMatch) {
       score += 40;
       reasons.push(game.matchReasons.genre);
-    } else if (genreRelated(game.genre, genre)) {
+    } else if (genres.some(g => genreRelated(game.genre, g))) {
       score += 15;
-      reasons.push(`Related to your ${genre} preference`);
+      reasons.push(`Related to your selected genres`);
     }
 
-    // Mode match
-    const modeOk =
-      mode === 'both' ||
-      game.modes.includes(mode) ||
-      game.modes.includes('both');
-    if (modeOk) { score += 15; }
+    // Mode — game must support at least one selected mode
+    const modeOk = modes.some(m =>
+      m === 'both' ||
+      game.modes.includes(m) ||
+      game.modes.includes('both')
+    );
+    if (modeOk) score += 15;
 
-    // Session match
-    if (game.sessionLength.includes(session)) {
-      score += 10;
+    // Session length — score for each matching session
+    const sessionMatches = sessions.filter(s => game.sessionLength.includes(s));
+    if (sessionMatches.length > 0) {
+      score += 10 * Math.min(sessionMatches.length, 2); // up to +20
       reasons.push(game.matchReasons.session);
     }
 
-    // Experience match
-    if (game.experience.includes(experience)) {
-      score += 20;
+    // Experience — score for each matching experience
+    const expMatches = experiences.filter(e => game.experience.includes(e));
+    if (expMatches.length > 0) {
+      score += 20 * Math.min(expMatches.length, 2); // up to +40
       reasons.push(game.matchReasons.experience);
     }
 
-    // Build match note from best reasons
     const matchNote = reasons.slice(0, 2).join('. ') || `Available on your platform in ${game.genre}`;
-
     return { game, score, matchNote };
   })
   .filter(r => r.score > 0)
@@ -719,9 +734,11 @@ function animateLoading(callback) {
 
 function renderResultsPage(scored) {
   // Update sub-header
-  const { genre, experience, platform } = answers;
+  const genres      = answers.genre      || [];
+  const experiences = answers.experience || [];
+  const platforms   = answers.platform   || [];
   $('matchSub').textContent =
-    `Best ${genre} games for ${platform} — ${experience} focus`;
+    `${genres.join(', ') || 'Mixed'} games for ${platforms.join(', ') || 'your platform'} — ${experiences.join(', ') || 'your'} focus`;
 
   // Reset filters
   $('searchInput').value  = '';
@@ -842,10 +859,13 @@ $('gameModal').addEventListener('click', (e) => {
  */
 function saveHistory(scored) {
   const history = loadHistory();
+  const platforms = answers.platform || [];
+  const genres    = answers.genre    || [];
   const entry = {
     date:    new Date().toISOString(),
     answers: { ...answers },
-    games:   scored.slice(0, 5).map(r => r.game.title)
+    games:   scored.slice(0, 5).map(r => r.game.title),
+    summary: `${genres.join('+')} on ${platforms.join('+')}`
   };
   history.unshift(entry);
   if (history.length > 10) history.pop();
@@ -883,11 +903,12 @@ function renderHistory() {
     const d    = new Date(entry.date);
     const dateStr = d.toLocaleDateString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
     const topGames = entry.games.slice(0, 3).join(', ');
+    const summary  = entry.summary || 'mixed';
     return `
       <div class="history-entry">
         <div class="history-icon">🎮</div>
         <div class="history-info">
-          <div class="history-date">${dateStr} · ${entry.answers.genre} · ${entry.answers.platform}</div>
+          <div class="history-date">${dateStr} · ${summary}</div>
           <div class="history-games">${topGames}</div>
         </div>
       </div>`;

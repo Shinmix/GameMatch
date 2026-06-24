@@ -315,9 +315,14 @@ body {
 
 .q-hint {
   font-size: 0.85rem;
-  color: var(--text-muted);
+  color: var(--neon-blue);
   margin-bottom: 28px;
+  opacity: 0.75;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
+.q-hint::before { content: '⊕'; font-size: 0.75em; }
 
 .options-grid {
   display: grid;
