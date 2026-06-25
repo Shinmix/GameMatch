@@ -1,3 +1,4 @@
+cat > /mnt/user-data/outputs/index.html << 'HTMLEOF'
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,6 +8,22 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
+  <!-- ========== GLOBAL NAV ========== -->
+  <nav class="topnav">
+    <div class="topnav-brand">
+      <span class="brand-icon">🎮</span>
+      <span class="brand-name">GameMatch</span>
+    </div>
+    <div class="topnav-links">
+      <button class="nav-link" id="navHome">Home</button>
+      <button class="nav-link" id="navQuestPass">
+        <span>⭐ QuestPass</span>
+        <span class="nav-points-badge" id="navPointsBadge">0 pts</span>
+      </button>
+      <button class="nav-link" id="navHistory">History</button>
+    </div>
+  </nav>
 
   <!-- ========== HERO SECTION ========== -->
   <section id="hero" class="section active">
@@ -38,6 +55,18 @@
         <div class="stat"><span class="stat-num">5</span><span class="stat-label">Questions</span></div>
         <div class="stat-divider"></div>
         <div class="stat"><span class="stat-num">30s</span><span class="stat-label">To Match</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><span class="stat-num" id="heroPointsStat">0</span><span class="stat-label">QP Points</span></div>
+      </div>
+
+      <!-- QuestPass teaser on hero -->
+      <div class="hero-questpass-teaser" id="heroQPTeaser">
+        <div class="qp-teaser-icon">⭐</div>
+        <div class="qp-teaser-text">
+          <strong>QuestPass is live!</strong>
+          Redeem gift card codes to earn points &amp; unlock exclusive game picks.
+        </div>
+        <button class="btn btn-primary btn-sm" id="heroQPBtn">Get Started</button>
       </div>
     </div>
   </section>
@@ -45,8 +74,6 @@
   <!-- ========== QUIZ SECTION ========== -->
   <section id="quiz" class="section">
     <div class="quiz-container">
-
-      <!-- Progress bar -->
       <div class="progress-wrap">
         <div class="progress-info">
           <span id="progressLabel">Question 1 of 5</span>
@@ -63,16 +90,12 @@
           <div class="step" data-step="4"></div>
         </div>
       </div>
-
-      <!-- Question card -->
       <div class="question-card" id="questionCard">
         <div class="q-number" id="qNumber">01</div>
         <h2 class="q-text" id="qText"></h2>
         <p class="q-hint" id="qHint"></p>
         <div class="options-grid" id="optionsGrid"></div>
       </div>
-
-      <!-- Nav buttons -->
       <div class="quiz-nav">
         <button class="btn btn-ghost" id="prevBtn" disabled>← Back</button>
         <button class="btn btn-primary" id="nextBtn" disabled>Next →</button>
@@ -97,8 +120,6 @@
   <!-- ========== RESULTS SECTION ========== -->
   <section id="results" class="section">
     <div class="results-container">
-
-      <!-- Top bar -->
       <div class="results-header">
         <div>
           <h2 class="results-title">Your Matches</h2>
@@ -109,18 +130,143 @@
             <span class="search-icon">🔍</span>
             <input type="text" id="searchInput" class="search-input" placeholder="Search games…" />
           </div>
-
         </div>
       </div>
 
-      <!-- Game cards -->
+      <!-- QuestPass exclusive banner (shown only if pass active) -->
+      <div class="qp-exclusive-banner" id="qpExclusiveBanner" style="display:none">
+        <span class="qp-exc-icon">⭐</span>
+        <span><strong>QuestPass Active</strong> — Exclusive recommendations unlocked below!</span>
+        <span class="qp-exc-badge">MEMBER</span>
+      </div>
+
       <div class="games-grid" id="gamesGrid"></div>
 
-      <!-- Bottom actions -->
       <div class="results-actions">
         <button class="btn btn-primary" id="restartBtn">↺ Restart Quiz</button>
         <button class="btn btn-ghost" id="viewHistoryBtn">View History</button>
       </div>
+    </div>
+  </section>
+
+  <!-- ========== QUESTPASS SECTION ========== -->
+  <section id="questpass" class="section">
+    <div class="qp-container">
+
+      <!-- Header -->
+      <div class="qp-header">
+        <div class="qp-logo">⭐</div>
+        <h2 class="qp-title"><span class="gradient-text">QuestPass</span></h2>
+        <p class="qp-subtitle">Redeem gift card codes to earn points and unlock exclusive game recommendations.</p>
+      </div>
+
+      <!-- Points card -->
+      <div class="qp-points-card">
+        <div class="qp-points-left">
+          <div class="qp-points-label">Your Points</div>
+          <div class="qp-points-value" id="qpPointsDisplay">0</div>
+          <div class="qp-tier-label" id="qpTierLabel">🎮 Starter</div>
+        </div>
+        <div class="qp-points-right">
+          <div class="qp-tier-progress-wrap">
+            <div class="qp-tier-info">
+              <span id="qpTierCurrent">Starter</span>
+              <span id="qpTierNext">→ Bronze (need 200 pts)</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="qpTierFill" style="width:0%"></div>
+            </div>
+          </div>
+          <div class="qp-perks" id="qpPerks">
+            <div class="qp-perk locked">🔒 Bronze: +5 exclusive picks</div>
+            <div class="qp-perk locked">🔒 Silver: +10 exclusive picks</div>
+            <div class="qp-perk locked">🔒 Gold: Full VIP library</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gift card redeem -->
+      <div class="qp-redeem-card">
+        <div class="qp-redeem-header">
+          <div class="qp-redeem-icon">🎁</div>
+          <div>
+            <h3 class="qp-redeem-title">Redeem a Gift Card</h3>
+            <p class="qp-redeem-sub">Enter your code below to earn QuestPass points.</p>
+          </div>
+        </div>
+        <div class="qp-redeem-input-row">
+          <input type="text" id="giftCardInput" class="qp-code-input" placeholder="e.g. GAMER-2025-XXXX" maxlength="20" />
+          <button class="btn btn-primary" id="redeemBtn">Redeem</button>
+        </div>
+        <div class="qp-redeem-feedback" id="redeemFeedback"></div>
+        <div class="qp-demo-codes">
+          <span class="demo-label">🧪 Demo codes to try:</span>
+          <button class="demo-code-btn" data-code="GAMER-2025-GOLD">GAMER-2025-GOLD</button>
+          <button class="demo-code-btn" data-code="QUEST-STAR-500">QUEST-STAR-500</button>
+          <button class="demo-code-btn" data-code="NEXUS-PLAY-200">NEXUS-PLAY-200</button>
+          <button class="demo-code-btn" data-code="LOOT-DROP-100">LOOT-DROP-100</button>
+        </div>
+      </div>
+
+      <!-- Redeemed history -->
+      <div class="qp-redeemed-section">
+        <h3 class="qp-section-title">Redeemed Codes</h3>
+        <div id="qpRedeemedList" class="qp-redeemed-list">
+          <p class="qp-empty">No codes redeemed yet.</p>
+        </div>
+      </div>
+
+      <!-- Tier rewards breakdown -->
+      <div class="qp-tiers-section">
+        <h3 class="qp-section-title">Tier Rewards</h3>
+        <div class="qp-tiers-grid">
+          <div class="qp-tier-card" data-tier="starter">
+            <div class="tier-icon">🎮</div>
+            <div class="tier-name">Starter</div>
+            <div class="tier-pts">0 pts</div>
+            <ul class="tier-perks-list">
+              <li>✓ Standard recommendations</li>
+              <li>✓ Quiz history</li>
+            </ul>
+          </div>
+          <div class="qp-tier-card" data-tier="bronze">
+            <div class="tier-icon">🥉</div>
+            <div class="tier-name">Bronze</div>
+            <div class="tier-pts">200 pts</div>
+            <ul class="tier-perks-list">
+              <li>✓ Everything in Starter</li>
+              <li>✓ +5 exclusive picks</li>
+              <li>✓ Hidden gem games</li>
+            </ul>
+          </div>
+          <div class="qp-tier-card" data-tier="silver">
+            <div class="tier-icon">🥈</div>
+            <div class="tier-name">Silver</div>
+            <div class="tier-pts">500 pts</div>
+            <ul class="tier-perks-list">
+              <li>✓ Everything in Bronze</li>
+              <li>✓ +10 exclusive picks</li>
+              <li>✓ Upcoming releases</li>
+            </ul>
+          </div>
+          <div class="qp-tier-card" data-tier="gold">
+            <div class="tier-icon">🥇</div>
+            <div class="tier-name">Gold</div>
+            <div class="tier-pts">1000 pts</div>
+            <ul class="tier-perks-list">
+              <li>✓ Everything in Silver</li>
+              <li>✓ Full VIP library</li>
+              <li>✓ Early access picks</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="qp-footer-actions">
+        <button class="btn btn-primary" id="qpStartQuizBtn">▶ Start Quiz Now</button>
+        <button class="btn btn-ghost" id="qpBackBtn">← Back to Home</button>
+      </div>
+
     </div>
   </section>
 
@@ -149,6 +295,14 @@
     </div>
   </div>
 
+  <!-- ========== POINTS TOAST ========== -->
+  <div class="points-toast" id="pointsToast">
+    <span class="toast-icon">⭐</span>
+    <span id="toastMsg">+100 points earned!</span>
+  </div>
+
   <script src="script.js"></script>
 </body>
 </html>
+HTMLEOF
+echo "Done"
